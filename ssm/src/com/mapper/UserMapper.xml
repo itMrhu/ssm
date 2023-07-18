@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mapper.UserMapper">
+ <insert id="addUser" parameterType="user">
+ insert into user (id,username,password,status) values(#{id},#{username},#{password},#{status})
+ </insert>
+ <select id="getUserList" parameterType="user" resultType="user">
+   select *from user 
+   <where>
+	   	<if test="username!=''and username!=null">
+	   		and username like concat('%',#{username},'%')
+	   	</if>
+	   </where>
+	   LIMIT #{page},#{rows}
+ </select>
+ <update id="editUser" parameterType="user">
+ 	update user set username=#{username},password=#{password},status=#{status} where id=#{id}
+ </update>
+ <delete id="deleteUser"> 
+   delete from user where 
+  <foreach item="id" collection="ids" open="id in (" separator="," close=")">
+      #{id}
+  </foreach>
+ </delete>
+ <select id="checkUsernamePassword" parameterType="user" resultType="user"> 
+ select *from user where username=#{username} and password =#{password}
+ </select>
+ <select id="getCount" parameterType="user" resultType="Integer">
+  select count(id) from `user`
+  <where>
+	   	<if test="username!=''and username!=null">
+	   		and username like concat('%',#{username},'%')
+	   	</if>
+	   </where>
+ 
+ </select>
+  <select id="searchUser" parameterType="user" resultType="user"> 
+   select *from user where username=#{username}
+ </select>
+ 
+</mapper>

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:tx="http://www.springframework.org/schema/tx" xmlns:aop="http://www.springframework.org/schema/aop"
+
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans-4.3.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context-4.3.xsd
+        http://www.springframework.org/schema/tx
+        http://www.springframework.org/schema/tx/spring-tx-4.3.xsd
+        http://www.springframework.org/schema/aop
+        http://www.springframework.org/schema/aop/spring-aop-4.3.xsd">
+	<!-- 引入数据库 -->
+	<context:property-placeholder location="classpath:database.properties" />
+	<!-- 配置数据源 -->
+	<bean id="dataSource" class="org.apache.commons.dbcp2.BasicDataSource">
+		<property name="driverClassName" value="${jdbc.driver}"></property>
+		<property name="url" value="${jdbc.url}"></property>
+		<property name="username" value="${jdbc.username}"></property>
+		<property name="password" value="${jdbc.password}"></property>
+	</bean>
+
+	<!-- 配置事务管理 -->
+	<bean id="transactionManager"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource"></property>
+
+	</bean>
+	    <!-- 配置通知:定义那些方法需要用事务管理器进行管理 -->
+	<tx:advice id="txAdvice" transaction-manager="transactionManager">
+	   <!--   配置传播行为 -->
+	   <tx:attributes>	     
+ 		<!-- 可以用正则表达式   update* 表示方法名update开头    udpateUser类似的方法  用事务管理器去管理   -->
+<!-- name:表示方法名  可以用正则表达式    哪些方法需要用到事务管理  -->
+<!-- propagation： 传播行为
+    REQUIRED  ：  表示指定的方法必须在事务的环境中进行，如果环境是非事务环境，就创建一个事务环境
+    SUPPORTS  ：  表示指定的方法执行时候  如果是在事务环境下  那就用事务方式执行，如果是在非事务环境下  方法就在非事务环境中执行
+    read-only ：只读事务。 对于增删改操作，修改数据库  对数据库的链接要求较高       。  查询：只要读取数据库就行，对数据库的链接要求低
+ -->
+			<tx:method name="update*" propagation="REQUIRED"/>
+			<tx:method name="edit*" propagation="REQUIRED"/>
+			<tx:method name="delete*" propagation="REQUIRED"/>
+			<tx:method name="remove*" propagation="REQUIRED"/>
+			<tx:method name="insert*" propagation="REQUIRED"/>
+			<tx:method name="add*" propagation="REQUIRED"/>	
+				
+			<tx:method name="get*" propagation="SUPPORTS" read-only="true"/>
+			<tx:method name="find*" propagation="SUPPORTS" read-only="true"/>	   
+	   </tx:attributes>
+	</tx:advice>
+	<!-- 配置切面 -->
+	<aop:config>
+		<aop:advisor advice-ref="txAdvice" pointcut="execution(* com.service.*.*(..))"/>	
+	</aop:config>
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource"></property>
+		<property name="configLocation" value="classpath:mybatis.xml"></property>
+	</bean>
+<!-- 	配置mapper接口 -->
+	<bean id="mapperScannerConfigurer" class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+	<property name="basePackage" value="com.mapper"></property>
+	<property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"></property>	
+	</bean>
+<!-- 	配置注解 -->
+   <context:component-scan base-package="com.service"></context:component-scan>
+
+</beans>
